@@ -9,10 +9,20 @@ const io = socketio(server);
 
 // ejs setup
 app.set("view engine", "ejs");
-app.set(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "/public")));
+// socket
+io.on("connection", (socket) => {
+  socket.on("send-location", (data) => {
+    console.log(data, socket.id);
+    io.emit("receive-location", { ...data, id: socket.id });
+  });
+  socket.on("disconnect", () => {
+    io.emit("user-disconnected", socket.id);
+  });
+});
 
 app.get("/", (req, res) => {
-  res.send("Hello World");
+  res.render("index");
 });
 
 server.listen(3000, () => {
