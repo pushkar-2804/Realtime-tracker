@@ -7,16 +7,21 @@ const server = http.createServer(app);
 const socketio = require("socket.io");
 const io = socketio(server);
 
+const markers = {};
+
 // ejs setup
 app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "/public")));
 // socket
 io.on("connection", (socket) => {
+  socket.emit("init-markers", markers);
   socket.on("send-location", (data) => {
     console.log(data, socket.id);
+    markers[socket.id] = data;
     io.emit("receive-location", { ...data, id: socket.id });
   });
   socket.on("disconnect", () => {
+    delete markers[socket.id];
     io.emit("user-disconnected", socket.id);
   });
 });

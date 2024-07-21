@@ -11,3 +11,19 @@ body {
   height: 100%;
   width: 100%;
 }
+
+#findLocationButton {
+  position: fixed;
+  height: 5%;
+  width: 5%;
+  padding: 0 10px;
+  max-width: 30px;
+  bottom: 30px;
+  right: 20px;
+  border-radius: 50%;
+  background-color: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
