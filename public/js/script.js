@@ -18,7 +18,9 @@ navigator.permissions.query({ name: "geolocation" }).then((result) => {
       },
       (error) => {
         // Permission denied or another error occurred
-        alert("Geolocation permission is necessary");
+        alert(
+          "Geolocation permission is necessary. Go to settings and enable it. You cant view other's location without sharing your own"
+        );
         location.reload();
       }
     );
