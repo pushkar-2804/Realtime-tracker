@@ -27,3 +27,10 @@ body {
   align-items: center;
   z-index: 1000;
 }
+
+#searchWrap {
+  z-index: 1000;
+  position: fixed;
+  top: 5%;
+  right: 10%;
+}

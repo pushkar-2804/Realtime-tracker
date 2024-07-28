@@ -16,7 +16,6 @@ app.use(express.static(path.join(__dirname, "/public")));
 io.on("connection", (socket) => {
   socket.emit("init-markers", markers);
   socket.on("send-location", (data) => {
-    console.log(data, socket.id);
     markers[socket.id] = data;
     io.emit("receive-location", { ...data, id: socket.id });
   });

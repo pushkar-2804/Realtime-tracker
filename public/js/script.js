@@ -1,8 +1,16 @@
 const socket = io();
 const myusername = prompt("Enter your name");
+// DOM Event listners
 document
   .getElementById("findLocationButton")
   .addEventListener("click", findMyLocation);
+document
+  .getElementById("findLocationButton")
+  .addEventListener("click", findMyLocation);
+
+document
+  .getElementById("searchButton")
+  .addEventListener("click", searchDestination);
 
 if (!myusername) {
   location.reload();
@@ -27,6 +35,7 @@ navigator.permissions.query({ name: "geolocation" }).then((result) => {
   }
 });
 let watchId;
+let userMarker = null;
 
 function startWatchingLocation() {
   if (navigator.geolocation) {
@@ -38,6 +47,14 @@ function startWatchingLocation() {
           longitude,
           username: myusername,
         });
+        if (!userMarker) {
+          userMarker = L.marker([latitude, longitude])
+            .addTo(map)
+            .bindPopup("You are here")
+            .openPopup();
+        } else {
+          userMarker.setLatLng([latitude, longitude]);
+        }
       },
       (err) => {
         console.log(err);
@@ -69,6 +86,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 }).addTo(map);
 
 const markers = {};
+const routeLayer = L.layerGroup().addTo(map);
 
 socket.on("init-markers", (data) => {
   for (const key in data) {
@@ -122,4 +140,59 @@ function findMyLocation() {
     console.log("Geolocation is not supported by this browser.");
     startWatchingLocation();
   }
+}
+
+function searchDestination() {
+  const destination = document.getElementById("destinationInput").value;
+  if (!destination) {
+    alert("Please enter a destination.");
+    return;
+  }
+
+  fetch(
+    `https://nominatim.openstreetmap.org/search?format=json&q=${destination}`
+  )
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data);
+      if (data.length > 0) {
+        const destLatLng = [data[0].lat, data[0].lon];
+        getRoute(destLatLng);
+      } else {
+        alert("Destination not found.");
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching geocoding data:", error);
+    });
+}
+
+function getRoute(destLatLng) {
+  if (!userMarker) {
+    alert("Unable to get your current location.");
+    return;
+  }
+
+  const userLatLng = userMarker.getLatLng();
+  const url = `https://router.project-osrm.org/route/v1/driving/${userLatLng.lng},${userLatLng.lat};${destLatLng[1]},${destLatLng[0]}?overview=full&geometries=geojson`;
+
+  fetch(url)
+    .then((response) => response.json())
+    .then((data) => {
+      const route = data.routes[0];
+      if (route) {
+        const routeCoordinates = route.geometry.coordinates.map((coord) => [
+          coord[1],
+          coord[0],
+        ]);
+        routeLayer.clearLayers();
+        L.polyline(routeCoordinates, { color: "blue" }).addTo(routeLayer);
+        map.fitBounds(L.polyline(routeCoordinates).getBounds());
+      } else {
+        alert("No route found.");
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching route data:", error);
+    });
 }
